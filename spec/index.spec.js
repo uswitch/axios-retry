@@ -116,19 +116,20 @@ describe('axiosRetry(axios, { retries, retryCondition })', () => {
         });
       });
 
-      it('should honor the original `timeout` across retries', done => {
+      // Every retry will have the same timeout
+      it('should honor the original `timeout` across retries.', done => {
         const client = axios.create();
 
         setupResponses(client, [
-          () => nock('http://example.com').get('/test').delay(75).replyWithError(NETWORK_ERROR),
-          () => nock('http://example.com').get('/test').delay(75).replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').delay(150).replyWithError(NETWORK_ERROR),
+          () => nock('http://example.com').get('/test').delay(150).replyWithError(NETWORK_ERROR),
           () => nock('http://example.com').get('/test').reply(200)
         ]);
 
         axiosRetry(client, { retries: 3 });
 
-        client.get('http://example.com/test', { timeout: 100 }).then(done.fail, error => {
-          expect(error.code).toBe('ECONNABORTED');
+        client.get('http://example.com/test', { timeout: 200 }).then(error => {
+          expect(error.status).toBe(200);
           done();
         });
       });
